@@ -1,6 +1,7 @@
 package com.aluracursos.spring_data_jpa.principal;
 
 import com.aluracursos.spring_data_jpa.model.*;
+import com.aluracursos.spring_data_jpa.repository.SerieRepository;
 import com.aluracursos.spring_data_jpa.service.ConsumoAPI;
 import com.aluracursos.spring_data_jpa.service.ConvierteDatos;
 
@@ -17,6 +18,11 @@ public class Principal {
     private final String API_KEY = "&apikey=6d485162";
     private ConvierteDatos conversor = new ConvierteDatos();
     private List<DatosSerie> datosSeries = new ArrayList<>();
+    private SerieRepository repositorio;
+
+    public Principal(SerieRepository repository) {
+        this.repositorio=repository;
+    }
 
     public void muestraElMenu() {
         var opcion = -1;
@@ -73,15 +79,14 @@ public class Principal {
     }
     private void buscarSerieWeb() {
         DatosSerie datos = getDatosSerie();
-        datosSeries.add(datos);
+        Serie serie = new Serie(datos);
+        repositorio.save(serie);
+        //datosSeries.add(datos);
         System.out.println(datos);
     }
 
     private void mostrarSeriesBuscadas() {
-        List<Serie> series = new ArrayList<>();
-        series = datosSeries.stream()
-                .map(d -> new Serie(d))
-                .collect(Collectors.toList());
+        List<Serie> series = repositorio.findAll();
 
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
