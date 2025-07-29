@@ -1,7 +1,9 @@
 package com.aluracursos.challenge_literatura;
 
+import com.aluracursos.challenge_literatura.model.DatosAPI;
 import com.aluracursos.challenge_literatura.principal.Principal;
 import com.aluracursos.challenge_literatura.service.ConsumoAPI;
+import com.aluracursos.challenge_literatura.service.ConvierteDatos;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +21,8 @@ public class ChallengeLiteraturaApplication implements CommandLineRunner {
 		Principal principal = new Principal();
 		ConsumoAPI consumoAPI = new ConsumoAPI();
 		String json = consumoAPI.obtenerDatos(principal.URL);
-		System.out.println(json);
+		ConvierteDatos conversor = new ConvierteDatos();
+		DatosAPI data = conversor.obtenerDatos(json, DatosAPI.class);
+		System.out.println(data);
 	}
 }
