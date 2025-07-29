@@ -1,6 +1,8 @@
 package com.aluracursos.challenge_literatura;
 
 import com.aluracursos.challenge_literatura.model.DatosAPI;
+import com.aluracursos.challenge_literatura.model.DatosLibro;
+import com.aluracursos.challenge_literatura.model.Libro;
 import com.aluracursos.challenge_literatura.principal.Principal;
 import com.aluracursos.challenge_literatura.service.ConsumoAPI;
 import com.aluracursos.challenge_literatura.service.ConvierteDatos;
@@ -23,6 +25,8 @@ public class ChallengeLiteraturaApplication implements CommandLineRunner {
 		String json = consumoAPI.obtenerDatos(principal.URL);
 		ConvierteDatos conversor = new ConvierteDatos();
 		DatosAPI data = conversor.obtenerDatos(json, DatosAPI.class);
-		System.out.println(data);
+		DatosLibro datosLibro = data.libros().getFirst();
+		Libro libro = new Libro(datosLibro);
+		System.out.println(libro);
 	}
 }
