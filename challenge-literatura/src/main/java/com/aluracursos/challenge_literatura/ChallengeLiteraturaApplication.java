@@ -21,12 +21,6 @@ public class ChallengeLiteraturaApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		Principal principal = new Principal();
-		ConsumoAPI consumoAPI = new ConsumoAPI();
-		String json = consumoAPI.obtenerDatos(principal.URL);
-		ConvierteDatos conversor = new ConvierteDatos();
-		DatosAPI data = conversor.obtenerDatos(json, DatosAPI.class);
-		DatosLibro datosLibro = data.libros().getFirst();
-		Libro libro = new Libro(datosLibro);
-		System.out.println(libro);
+		principal.mostrarMenu();
 	}
 }

@@ -1,14 +1,17 @@
 package com.aluracursos.challenge_literatura.principal;
 
+import com.aluracursos.challenge_literatura.model.DatosAPI;
+import com.aluracursos.challenge_literatura.model.DatosLibro;
 import com.aluracursos.challenge_literatura.service.ConsumoAPI;
 import com.aluracursos.challenge_literatura.service.ConvierteDatos;
 
+import javax.xml.crypto.Data;
 import java.util.Scanner;
 
 public class Principal {
     private Scanner scanner = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
-    public final String URL = "http://gutendex.com/books/";
+    public final String URL_BASE = "http://gutendex.com/books/?";
     private ConvierteDatos conversor = new ConvierteDatos();
 
     public Principal() {}
@@ -27,14 +30,14 @@ public class Principal {
                     5. Listar libros por idiomas
                     0. Salir  
                     -> Ingrese opción:                
-                    """;
-            System.out.println(menu);
+                     """;
+            System.out.print(menu);
             opcion = scanner.nextInt();
             scanner.nextLine();
 
             switch (opcion) {
                 case 1:
-                    //buscarLibro();
+                    buscarLibro();
                     break;
                 case 2:
                     //mostrarLibrosRegistrados();
@@ -55,5 +58,22 @@ public class Principal {
                     System.out.println("Opción no válida");
             }
         } while (opcion != 0);
+    }
+
+    private DatosLibro getDatosLibro() {
+        DatosLibro data = null;
+        System.out.println("\nIngrese el nombre del libro: ");
+        String nombreLibro = scanner.nextLine();
+        var json =consumoAPI.obtenerDatos(URL_BASE+"search="+nombreLibro.replace(" ", "%20"));
+        var results = conversor.obtenerDatos(json, DatosAPI.class);
+        System.out.println(json);
+        System.out.println(results);
+        data = results.libros().getFirst();
+        System.out.println(data);
+        return data;
+    }
+
+    private void buscarLibro() {
+        DatosLibro datosLibro = getDatosLibro();
     }
 }
