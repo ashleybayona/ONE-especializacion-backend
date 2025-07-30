@@ -1,18 +1,23 @@
 package com.aluracursos.challenge_literatura.principal;
 
+import com.aluracursos.challenge_literatura.model.Autor;
 import com.aluracursos.challenge_literatura.model.DatosAPI;
 import com.aluracursos.challenge_literatura.model.DatosLibro;
+import com.aluracursos.challenge_literatura.model.Libro;
 import com.aluracursos.challenge_literatura.service.ConsumoAPI;
 import com.aluracursos.challenge_literatura.service.ConvierteDatos;
 
 import javax.xml.crypto.Data;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Principal {
     private Scanner scanner = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     public final String URL_BASE = "http://gutendex.com/books/?";
     private ConvierteDatos conversor = new ConvierteDatos();
+    private Set<Libro> librosRegistrados = new HashSet<>();
+    private Set<Autor> autoresRegistrados = new HashSet<>();
 
     public Principal() {}
 
@@ -40,16 +45,16 @@ public class Principal {
                     buscarLibro();
                     break;
                 case 2:
-                    //mostrarLibrosRegistrados();
+                    mostrarLibrosRegistrados();
                     break;
                 case 3:
-                    //mostrarAutoresRegistrados();
+                    mostrarAutoresRegistrados();
                     break;
                 case 4:
-                    //mostrarAutoresVivosEnAnio();
+                    mostrarAutoresVivosEnAnio();
                     break;
                 case 5:
-                    //mostrarLibrosPorIdioma();
+                    mostrarLibrosPorIdioma();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -66,14 +71,70 @@ public class Principal {
         String nombreLibro = scanner.nextLine();
         var json =consumoAPI.obtenerDatos(URL_BASE+"search="+nombreLibro.replace(" ", "%20"));
         var results = conversor.obtenerDatos(json, DatosAPI.class);
-        System.out.println(json);
-        System.out.println(results);
         data = results.libros().getFirst();
-        System.out.println(data);
         return data;
+    }
+
+    private List<Libro> getLibrosPorIdioma() {
+        System.out.print("""
+                \nIngrese abreviatura del idioma a buscar:
+                1. es - Español
+                2. en - Inglés
+                3. fr - Francés
+                4. pt - Portugués
+                -> Ingrese opción: 
+                """);
+        var filtroIdioma = scanner.nextInt();
+        scanner.nextLine();
+        List<Libro> librosPorIdioma = librosRegistrados.stream()
+                .filter(libro -> libro.getLenguaje().equals(filtroIdioma))
+                .collect(Collectors.toList());
+        return librosPorIdioma;
+    }
+
+    private List<Autor> getAutoresPorAnio() {
+        System.out.print("\nIngrese el año: ");
+        var filtroAnio = scanner.nextInt();
+        scanner.nextLine();
+        List<Autor> autoresPorAnio = autoresRegistrados.stream()
+                .filter(autor -> autor.getAnio_muerte() < filtroAnio)
+                .collect(Collectors.toList());
+        return autoresPorAnio;
     }
 
     private void buscarLibro() {
         DatosLibro datosLibro = getDatosLibro();
+        if (datosLibro != null) {
+            Libro libro = new Libro(datosLibro);
+            Autor autor = libro.getAutor();
+            System.out.println("\nLibro encontrado:");
+            System.out.println(libro);
+            librosRegistrados.add(libro);
+            autoresRegistrados.add(autor);
+        } else {
+            System.out.println("\nLibro no encontrado");
+        }
+    }
+
+    private void mostrarLibrosRegistrados() {
+        librosRegistrados.stream()
+                .sorted(Comparator.comparing(Libro::getTitulo))
+                .forEach(System.out::println);
+    }
+
+    private void mostrarAutoresRegistrados() {
+        autoresRegistrados.stream()
+                .sorted(Comparator.comparing(Autor::getNombre))
+                .forEach(System.out::println);
+    }
+
+    private void mostrarAutoresVivosEnAnio() {
+        List<Autor> autoresVivosPorAnio = getAutoresPorAnio();
+        autoresVivosPorAnio.forEach(System.out::println);
+    }
+
+    private void mostrarLibrosPorIdioma() {
+        List<Libro> librosPorIdioma = getLibrosPorIdioma();
+        librosPorIdioma.forEach(System.out::println);
     }
 }

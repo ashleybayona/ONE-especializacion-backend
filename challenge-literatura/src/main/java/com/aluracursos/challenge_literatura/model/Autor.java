@@ -1,5 +1,11 @@
 package com.aluracursos.challenge_literatura.model;
 
+import com.sun.jdi.LongValue;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalLong;
+
 public class Autor {
     private Integer id;
     private String nombre;
@@ -10,7 +16,8 @@ public class Autor {
 
     public Autor(DatosAutor datosAutor) {
         this.nombre = datosAutor.nombre();
-        this.anio_cumpleanios = datosAutor.anio_cumpleanios();
+        this.anio_cumpleanios = Optional.ofNullable(datosAutor.anio_cumpleanios())
+                .orElse(0L);
         this.anio_muerte = datosAutor.anio_muerte();
     }
 
@@ -28,10 +35,26 @@ public class Autor {
 
     @Override
     public String toString() {
-        return "Autor{" +
-                "nombre='" + nombre + '\'' +
-                ", anio_cumpleanios=" + anio_cumpleanios +
-                ", anio_muerte=" + anio_muerte +
-                '}';
+        return String.format("""
+                ---------------------------------------
+                                AUTOR
+                ---------------------------------------
+                Nombre: %s
+                Año de nacimiento: %s
+                Año de muerte: %s
+                """, nombre, anio_cumpleanios, anio_muerte);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Autor autor = (Autor) o;
+        return nombre.equals(autor.nombre);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre);
     }
 }
