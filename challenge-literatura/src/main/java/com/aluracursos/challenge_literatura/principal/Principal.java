@@ -4,6 +4,8 @@ import com.aluracursos.challenge_literatura.model.Autor;
 import com.aluracursos.challenge_literatura.model.DatosAPI;
 import com.aluracursos.challenge_literatura.model.DatosLibro;
 import com.aluracursos.challenge_literatura.model.Libro;
+import com.aluracursos.challenge_literatura.repository.AutorRepository;
+import com.aluracursos.challenge_literatura.repository.LibroRepository;
 import com.aluracursos.challenge_literatura.service.ConsumoAPI;
 import com.aluracursos.challenge_literatura.service.ConvierteDatos;
 
@@ -18,8 +20,18 @@ public class Principal {
     private ConvierteDatos conversor = new ConvierteDatos();
     private Set<Libro> librosRegistrados = new HashSet<>();
     private Set<Autor> autoresRegistrados = new HashSet<>();
+    private LibroRepository librosRepository;
+    private AutorRepository autoresRepository;
+    private  List<Libro> libros;
+    private  List<Autor> autores;
 
     public Principal() {}
+
+    public Principal(LibroRepository libroRepository, AutorRepository autorRepository) {
+        this.librosRepository = libroRepository;
+        this.autoresRepository = autorRepository;
+
+    }
 
     public void mostrarMenu() {
         int opcion;
@@ -66,12 +78,11 @@ public class Principal {
     }
 
     private DatosLibro getDatosLibro() {
-        DatosLibro data = null;
         System.out.println("\nIngrese el nombre del libro: ");
         String nombreLibro = scanner.nextLine();
         var json =consumoAPI.obtenerDatos(URL_BASE+"search="+nombreLibro.replace(" ", "%20"));
         var results = conversor.obtenerDatos(json, DatosAPI.class);
-        data = results.libros().getFirst();
+        DatosLibro data = results.libros().getFirst();
         return data;
     }
 
@@ -84,10 +95,12 @@ public class Principal {
                 4. pt - Portugués
                 -> Ingrese opción: 
                 """);
-        var filtroIdioma = scanner.nextInt();
-        scanner.nextLine();
-        List<Libro> librosPorIdioma = librosRegistrados.stream()
-                .filter(libro -> libro.getLenguaje().equals(filtroIdioma))
+        var filtroIdioma = scanner.nextLine();
+
+        List<Libro> todosLosLibros = librosRepository.findAll();
+
+        List<Libro> librosPorIdioma = todosLosLibros.stream()
+                .filter(l -> l.getLenguaje().equals(filtroIdioma))
                 .collect(Collectors.toList());
         return librosPorIdioma;
     }
@@ -96,12 +109,16 @@ public class Principal {
         System.out.print("\nIngrese el año: ");
         var filtroAnio = scanner.nextInt();
         scanner.nextLine();
-        List<Autor> autoresPorAnio = autoresRegistrados.stream()
-                .filter(autor -> autor.getAnio_muerte() < filtroAnio)
+
+        List<Autor> todosLosAutores = autoresRepository.findAll();
+
+        List<Autor> autoresPorAnio = todosLosAutores.stream()
+                .filter(a -> a.getAnio_muerte() != 0 && a.getAnio_muerte() > filtroAnio)
                 .collect(Collectors.toList());
         return autoresPorAnio;
     }
 
+    // LISTO
     private void buscarLibro() {
         DatosLibro datosLibro = getDatosLibro();
         if (datosLibro != null) {
@@ -109,32 +126,47 @@ public class Principal {
             Autor autor = libro.getAutor();
             System.out.println("\nLibro encontrado:");
             System.out.println(libro);
-            librosRegistrados.add(libro);
-            autoresRegistrados.add(autor);
+            //librosRegistrados.add(libro);
+            //autoresRegistrados.add(autor);
+            librosRepository.save(libro);
         } else {
             System.out.println("\nLibro no encontrado");
         }
     }
 
+    // LIBROS
     private void mostrarLibrosRegistrados() {
-        librosRegistrados.stream()
+        libros = librosRepository.findAll();
+        libros.stream()
                 .sorted(Comparator.comparing(Libro::getTitulo))
                 .forEach(System.out::println);
     }
 
+    // LISTO
     private void mostrarAutoresRegistrados() {
-        autoresRegistrados.stream()
+        autores = autoresRepository.findAll();
+        autores.stream()
                 .sorted(Comparator.comparing(Autor::getNombre))
                 .forEach(System.out::println);
     }
 
+    // LISTO
     private void mostrarAutoresVivosEnAnio() {
-        List<Autor> autoresVivosPorAnio = getAutoresPorAnio();
-        autoresVivosPorAnio.forEach(System.out::println);
+        Optional<List<Autor>> autoresVivosPorAnio = Optional.ofNullable(getAutoresPorAnio());
+        if (autoresVivosPorAnio.isPresent()) {
+            autoresVivosPorAnio.get().forEach(System.out::println);
+        } else {
+            System.out.println("\nNo se encontraron autores vivos en el año mencionado.");
+        }
     }
 
+    // LISTO
     private void mostrarLibrosPorIdioma() {
-        List<Libro> librosPorIdioma = getLibrosPorIdioma();
-        librosPorIdioma.forEach(System.out::println);
+        Optional<List<Libro>> librosPorIdioma = Optional.ofNullable(getLibrosPorIdioma());
+        if (librosPorIdioma.isPresent()) {
+            librosPorIdioma.get().forEach(System.out::println);
+        } else {
+            System.out.println("\nNo se encontraron libros en el idioma seleccionado.");
+        }
     }
 }

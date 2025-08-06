@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 
 public record DatosAutor(
         @JsonAlias("name") String nombre,
-        @JsonAlias("birth_year") Long anio_cumpleanios,
-        @JsonAlias("death_year") Long anio_muerte
+        @JsonAlias("birth_year") Integer anio_cumpleanios,
+        @JsonAlias("death_year") Integer anio_muerte
 ) {
 }
