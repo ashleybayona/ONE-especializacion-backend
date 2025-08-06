@@ -14,7 +14,7 @@ public class Libro {
     private Long id;
     @Column(unique = true)
     private String titulo;
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "autor_id")
     private Autor autor;
     private String lenguaje;

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name="autores")
@@ -55,6 +56,10 @@ public class Autor {
 
     @Override
     public String toString() {
+        String titulos = libros.stream()
+                .map(Libro::getTitulo)
+                .collect(Collectors.joining(", "));
+
         return String.format("""
                 ---------------------------------------
                                 AUTOR
@@ -62,7 +67,8 @@ public class Autor {
                 Nombre: %s
                 Año de nacimiento: %s
                 Año de muerte: %s
-                """, nombre, anio_cumpleanios, anio_muerte);
+                Libros: %s
+                """, nombre, anio_cumpleanios, anio_muerte, titulos);
     }
 
     @Override

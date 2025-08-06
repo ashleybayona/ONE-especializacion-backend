@@ -77,16 +77,20 @@ public class Principal {
         } while (opcion != 0);
     }
 
-    private DatosLibro getDatosLibro() {
+    private Optional<DatosLibro> getDatosLibro() {
         System.out.println("\nIngrese el nombre del libro: ");
         String nombreLibro = scanner.nextLine();
         var json =consumoAPI.obtenerDatos(URL_BASE+"search="+nombreLibro.replace(" ", "%20"));
         var results = conversor.obtenerDatos(json, DatosAPI.class);
-        DatosLibro data = results.libros().getFirst();
-        return data;
+
+        if (results.libros() != null && !results.libros().isEmpty()) {
+            return Optional.of(results.libros().getFirst());
+        }
+
+        return Optional.empty();
     }
 
-    private List<Libro> getLibrosPorIdioma() {
+    private Optional<List<Libro>> getLibrosPorIdioma() {
         System.out.print("""
                 \nIngrese abreviatura del idioma a buscar:
                 1. es - Español
@@ -97,38 +101,30 @@ public class Principal {
                 """);
         var filtroIdioma = scanner.nextLine();
 
-        List<Libro> todosLosLibros = librosRepository.findAll();
-
-        List<Libro> librosPorIdioma = todosLosLibros.stream()
-                .filter(l -> l.getLenguaje().equals(filtroIdioma))
-                .collect(Collectors.toList());
-        return librosPorIdioma;
+        return librosRepository.findByLenguajeIsLikeIgnoreCase(filtroIdioma);
     }
 
-    private List<Autor> getAutoresPorAnio() {
+    private Optional<List<Autor>> getAutoresPorAnio() {
         System.out.print("\nIngrese el año: ");
         var filtroAnio = scanner.nextInt();
         scanner.nextLine();
 
-        List<Autor> todosLosAutores = autoresRepository.findAll();
-
-        List<Autor> autoresPorAnio = todosLosAutores.stream()
-                .filter(a -> a.getAnio_muerte() != 0 && a.getAnio_muerte() > filtroAnio)
-                .collect(Collectors.toList());
-        return autoresPorAnio;
+        return autoresRepository.getAutoresVivosEn(filtroAnio);
     }
 
     // LISTO
     private void buscarLibro() {
-        DatosLibro datosLibro = getDatosLibro();
-        if (datosLibro != null) {
-            Libro libro = new Libro(datosLibro);
+        Optional<DatosLibro> datosLibro = getDatosLibro();
+        if (datosLibro.isPresent()) {
+            Libro libro = new Libro(datosLibro.get());
             Autor autor = libro.getAutor();
+
+            Autor autorFinal = autoresRepository.findOrCreateByNombre(autor);
+            libro.setAutor(autorFinal);
+            librosRepository.save(libro);
+
             System.out.println("\nLibro encontrado:");
             System.out.println(libro);
-            //librosRegistrados.add(libro);
-            //autoresRegistrados.add(autor);
-            librosRepository.save(libro);
         } else {
             System.out.println("\nLibro no encontrado");
         }
@@ -152,7 +148,7 @@ public class Principal {
 
     // LISTO
     private void mostrarAutoresVivosEnAnio() {
-        Optional<List<Autor>> autoresVivosPorAnio = Optional.ofNullable(getAutoresPorAnio());
+        Optional<List<Autor>> autoresVivosPorAnio = getAutoresPorAnio();
         if (autoresVivosPorAnio.isPresent()) {
             autoresVivosPorAnio.get().forEach(System.out::println);
         } else {
@@ -162,7 +158,7 @@ public class Principal {
 
     // LISTO
     private void mostrarLibrosPorIdioma() {
-        Optional<List<Libro>> librosPorIdioma = Optional.ofNullable(getLibrosPorIdioma());
+        Optional<List<Libro>> librosPorIdioma = getLibrosPorIdioma();
         if (librosPorIdioma.isPresent()) {
             librosPorIdioma.get().forEach(System.out::println);
         } else {
